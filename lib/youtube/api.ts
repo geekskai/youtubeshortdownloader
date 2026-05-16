@@ -147,6 +147,12 @@ export async function getVideoInfo(videoId: string): Promise<VideoInfo> {
   const defaultId = defaultQualityId(qualities)
   const durationRaw = data.lengthSeconds
 
+  console.log("getVideoInfo", `${new Date().toISOString()} videoId: ${videoId}`)
+  console.log("getVideoInfo", `${new Date().toISOString()} qualities: ${JSON.stringify(qualities)}`)
+  console.log("getVideoInfo", `${new Date().toISOString()} defaultId: ${defaultId}`)
+  console.log("getVideoInfo", `${new Date().toISOString()} durationRaw: ${durationRaw}`)
+  console.log("getVideoInfo", `${new Date().toISOString()} data: ${JSON.stringify(data)}`)
+
   return {
     videoId,
     title: data.title?.trim() || "YouTube Short",
