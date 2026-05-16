@@ -1609,13 +1609,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bufbuild/protobuf@npm:^2.0.0":
-  version: 2.12.0
-  resolution: "@bufbuild/protobuf@npm:2.12.0"
-  checksum: f905c34ffbf0a05ee3fd6281a13f5daa5b43c215682d4900b23629691c1ee7fe0d96fefbbad84055ba0547ef089fb2d488a68c4e8383abf5b7dc56a9207c44ea
-  languageName: node
-  linkType: hard
-
 "@citation-js/core@npm:^0.7.14":
   version: 0.7.18
   resolution: "@citation-js/core@npm:0.7.18"
@@ -9055,13 +9048,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"meriyah@npm:^6.1.4":
-  version: 6.1.4
-  resolution: "meriyah@npm:6.1.4"
-  checksum: ea10edbc6189cfb1e62111d847db4218b96f7a29a1b25cf0c9b6ccef7a95e50f2fe403f73375ff84ff13120529755687bc5d3966a799792253707d07ec75c3d8
-  languageName: node
-  linkType: hard
-
 "methods@npm:^1.1.1":
   version: 1.1.2
   resolution: "methods@npm:1.1.2"
@@ -13622,16 +13608,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"youtubei.js@npm:^17.0.1":
-  version: 17.0.1
-  resolution: "youtubei.js@npm:17.0.1"
-  dependencies:
-    "@bufbuild/protobuf": ^2.0.0
-    meriyah: ^6.1.4
-  checksum: 4d220810f865c932498be58720be1cf7cba09eac415325248a0fec752cf919944a9cc1648d1414ea738112924c9d8301afbc64b69491366528ceaaaae647837e
-  languageName: node
-  linkType: hard
-
 "youtubeshortdownloader@workspace:.":
   version: 0.0.0-use.local
   resolution: "youtubeshortdownloader@workspace:."
@@ -13689,7 +13665,6 @@ __metadata:
     soundcloud-downloader: ^1.0.0
     tailwindcss: ^3.4.3
     typescript: 5.9.3
-    youtubei.js: ^17.0.1
     zod: ^3.22.4
   languageName: unknown
   linkType: soft

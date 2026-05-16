@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { getVideoInfo, isApiConfigured, ShortsApiError } from "@/lib/youtube/api"
 import { parseYouTubeVideoId } from "@/lib/youtube/parse-url"
-import { resolveShortsVideo } from "@/lib/youtube/resolve-shorts"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -11,17 +11,29 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: Request) {
+  if (!isApiConfigured()) {
+    return NextResponse.json(
+      { error: "api_not_configured", message: "Set RAPIDAPI_KEY in .env.local" },
+      { status: 503 }
+    )
+  }
+
   try {
-    const json = await request.json()
-    const { url } = bodySchema.parse(json)
+    const { url } = bodySchema.parse(await request.json())
     const videoId = parseYouTubeVideoId(url)
 
     if (!videoId) {
       return NextResponse.json({ error: "invalid_url" }, { status: 400 })
     }
 
-    const video = await resolveShortsVideo(videoId)
-    const defaultQuality = video.defaultQualityId ?? video.qualities[0]?.id ?? "best"
+    const video = await getVideoInfo(videoId)
+
+    if (!video.qualities.length || !video.defaultQualityId) {
+      return NextResponse.json(
+        { error: "no_qualities", message: "No downloadable qualities for this video" },
+        { status: 422 }
+      )
+    }
 
     return NextResponse.json({
       videoId: video.videoId,
@@ -29,15 +41,22 @@ export async function POST(request: Request) {
       thumbnail: video.thumbnail,
       author: video.author,
       durationSeconds: video.durationSeconds,
-      qualityLabel: video.qualityLabel,
       qualities: video.qualities,
-      defaultQualityId: defaultQuality,
-      provider: video.provider,
-      downloadUrl: `/api/shorts/download?videoId=${encodeURIComponent(videoId)}&quality=${encodeURIComponent(defaultQuality)}`,
+      defaultQualityId: video.defaultQualityId,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : "fetch_failed"
+    if (error instanceof ShortsApiError) {
+      console.error("[api/shorts]", error.code, error.message)
+      return NextResponse.json(
+        { error: error.code, message: error.message },
+        { status: error.code === "not_configured" ? 503 : 502 }
+      )
+    }
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "invalid_body" }, { status: 400 })
+    }
+    const message = error instanceof Error ? error.message : "unknown"
     console.error("[api/shorts]", message)
-    return NextResponse.json({ error: "fetch_failed", message }, { status: 502 })
+    return NextResponse.json({ error: "upstream", message }, { status: 502 })
   }
 }

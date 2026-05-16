@@ -86,7 +86,8 @@
     "step_3": "Choose quality and download MP4",
     "hint": "Supports youtube.com/shorts/, youtu.be/, and watch?v= links.",
     "error_invalid_url": "Please enter a valid YouTube Shorts or video URL.",
-    "error_fetch_failed": "Could not fetch this video. Check the URL and try again."
+    "error_fetch_failed": "Could not fetch this video. Check the URL and try again.",
+    "error_api_not_configured": "Downloader is not configured on the server. Add RAPIDAPI_KEY to .env.local and restart."
   },
   "ToolsPage": {
     "tools_seo_title": "YouTube Shorts Downloader — MP4 Quality Picker | YoutubeShortDownloader",
