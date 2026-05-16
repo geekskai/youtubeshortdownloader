@@ -1,17 +1,12 @@
 import AppShell from "@/components/AppShell"
 import ClarityTracker from "@/components/ClarityTracker"
-import siteMetadata from "@/data/siteMetadata"
 import { Metadata } from "next"
 import { hasLocale } from "next-intl"
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import React from "react"
 import { routing } from "../i18n/routing"
-import {
-  generateHomeFAQSchema,
-  generateHomeHowToSchema,
-  HOME_LAST_MODIFIED,
-} from "@/lib/seo/home-faq"
+import { HOME_LAST_MODIFIED } from "@/lib/seo/home-faq"
 
 export const revalidate = 86400 // 24 hours
 
@@ -55,7 +50,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
       siteName: "YoutubeShortDownloader",
       images: [
         {
-          url: "/static/images/og/youtubeshortdownloader-home.png",
+          url: "/static/images/og/youtube-short-downloader-home.png",
           width: 1200,
           height: 630,
           alt: "YoutubeShortDownloader",
@@ -67,7 +62,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
       title: title,
       description: description,
       card: "summary_large_image",
-      images: ["/static/images/og/youtubeshortdownloader-home.png"],
+      images: ["/static/images/og/youtube-short-downloader-home.png"],
     },
     robots: {
       index: true,
@@ -194,7 +189,7 @@ export default async function RootLayout({
         },
         primaryImageOfPage: {
           "@type": "ImageObject",
-          url: `${baseUrl}/static/images/og/youtubeshortdownloader-home.png`,
+          url: `${baseUrl}/static/images/og/youtube-short-downloader-home.png`,
         },
         breadcrumb: {
           "@id": `${url}#breadcrumb`,

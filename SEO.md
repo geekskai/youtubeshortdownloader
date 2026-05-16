@@ -555,7 +555,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="font/woff2"
           crossOrigin="anonymous"
         />
-        <link rel="preload" href="/static/images/og/youtubeshortdownloader-home.png" as="image" />
+        <link rel="preload" href="/static/images/og/youtube-short-downloader-home.png" as="image" />
       </head>
       <body>{children}</body>
     </html>
