@@ -45,8 +45,31 @@ const CORE_FACTS = [
 
 const HOW_TO_STEPS = ["howto_step_1", "howto_step_2", "howto_step_3"] as const
 
-/** PC section container — aligned with header/footer (max-w-7xl) */
-const SECTION = "mx-auto w-full max-w-7xl px-4 sm:px-6"
+/** Section shell — matches decimaltools spacing rhythm */
+const SECTION = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+
+/**
+ * Typography scale (aligned with geekskai/decimaltools Main.tsx)
+ * Mobile-first: base sizes on root, sm/lg for progressive enhancement.
+ */
+const TYPE = {
+  badge:
+    "text-xs font-semibold uppercase tracking-[0.12em] text-primary-200",
+  h1: "text-3xl font-bold leading-tight tracking-tight text-transparent sm:text-4xl lg:text-5xl",
+  h2: "text-xl font-semibold leading-snug text-white sm:text-2xl",
+  sectionIntro: "text-sm leading-7 text-slate-300 sm:text-base",
+  body: "text-sm leading-7 text-slate-300 sm:text-base",
+  bodyMuted: "text-sm leading-7 text-slate-400 sm:text-base",
+  meta: "text-xs leading-6 text-slate-500",
+  factLabel: "text-xs font-semibold uppercase tracking-[0.12em]",
+  factTitle: "text-sm font-semibold leading-snug text-slate-100 sm:text-base",
+  factDetail: "text-sm leading-6 text-slate-300",
+  stepTitle: "text-sm font-semibold leading-snug text-slate-100 sm:text-base",
+  stepBody: "text-sm leading-7 text-slate-400",
+  faqQuestion: "text-sm font-semibold leading-snug text-slate-100 sm:text-base",
+  faqAnswer: "text-sm leading-7 text-slate-400 sm:text-base",
+  link: "text-sm font-medium text-primary-300 transition hover:text-primary-200 sm:text-base",
+} as const
 
 export default function Home({ posts = [] }) {
   const t = useTranslations("HomePage")
@@ -61,152 +84,159 @@ export default function Home({ posts = [] }) {
   }
 
   return (
-    <main className="bg-slate-950 text-slate-100">
+    <main className="overflow-x-hidden bg-slate-950 text-slate-100">
       {/* Hero + downloader */}
       <section
         id="downloader"
         aria-labelledby="hero-title"
         className="border-b border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
       >
-        <div className={`${SECTION} pb-10 pt-7 sm:pb-14 sm:pt-10 lg:pb-16 lg:pt-12`}>
-          <header className="mx-auto max-w-xl text-center lg:max-w-7xl">
-            <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary-400/30 bg-primary-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-200 sm:px-3.5 sm:text-[11px]">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" aria-hidden />
-              <span className="truncate">{t("hero_badge")}</span>
-            </p>
-            <h1
-              id="hero-title"
-              className="mt-4 bg-gradient-to-r from-primary-200 via-slate-100 to-primary-300 bg-clip-text text-[1.625rem] font-bold leading-[1.22] tracking-tight text-transparent sm:mt-5 sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15]"
-            >
-              {t("hero_title")}
-            </h1>
-
-            {/* Quick Answer — AI-extractable fact chunk */}
-            <aside
-              className="fact-chunk mx-auto mt-5 w-full max-w-3xl rounded-2xl border border-primary-500/20 bg-primary-500/5 p-4 text-left text-sm leading-relaxed text-slate-300 sm:p-5 sm:text-base lg:max-w-7xl"
-              aria-label="Quick answer"
-            >
-              <p>
-                <strong className="text-primary-200">{t("quick_answer_label")}</strong>{" "}
-                {t("quick_answer_text")}
+        <div className={`${SECTION} py-8 sm:py-12 lg:py-16`}>
+          <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-10 xl:gap-12">
+            <header className="text-center lg:col-span-5 lg:text-left">
+              <p
+                className={`inline-flex max-w-full items-center gap-2 rounded-full border border-primary-400/30 bg-primary-500/10 px-3 py-1 ${TYPE.badge}`}
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" aria-hidden />
+                <span className="truncate">{t("hero_badge")}</span>
               </p>
-              <ul className="mt-3 space-y-1.5 text-slate-400">
-                <li>
-                  <strong className="text-slate-200">{t("quick_answer_best_for_label")}</strong>{" "}
-                  {t("quick_answer_best_for")}
-                </li>
-                <li>
-                  <strong className="text-slate-200">{t("quick_answer_cost_label")}</strong>{" "}
-                  {t("quick_answer_cost")}
-                </li>
-                <li>
-                  <strong className="text-slate-200">{t("quick_answer_benefit_label")}</strong>{" "}
-                  {t("quick_answer_benefit")}
-                </li>
-              </ul>
-              <p className="mt-3 text-xs text-slate-500">
-                <time dateTime={HOME_LAST_MODIFIED}>
-                  {t("content_updated")}: {HOME_LAST_MODIFIED}
-                </time>
-              </p>
-            </aside>
-          </header>
+              <h1
+                id="hero-title"
+                className={`mt-4 bg-gradient-to-r from-primary-200 via-slate-100 to-primary-300 bg-clip-text sm:mt-5 lg:mt-6 ${TYPE.h1}`}
+              >
+                {t("hero_title")}
+              </h1>
 
-          <div className="mt-6 w-full sm:mt-8">
-            <ShortsDownloader variant="hero" autoFocus />
+              <aside
+                className="fact-chunk mx-auto mt-4 w-full rounded-2xl border border-primary-500/20 bg-primary-500/5 p-4 text-left sm:mt-5 sm:p-5 lg:mx-0"
+                aria-label="Quick answer"
+              >
+                <p className={TYPE.body}>
+                  <strong className="font-semibold text-primary-200">
+                    {t("quick_answer_label")}
+                  </strong>{" "}
+                  {t("quick_answer_text")}
+                </p>
+                <ul className={`mt-3 space-y-2 ${TYPE.bodyMuted}`}>
+                  <li>
+                    <strong className="font-semibold text-slate-200">
+                      {t("quick_answer_best_for_label")}
+                    </strong>{" "}
+                    {t("quick_answer_best_for")}
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-slate-200">
+                      {t("quick_answer_cost_label")}
+                    </strong>{" "}
+                    {t("quick_answer_cost")}
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-slate-200">
+                      {t("quick_answer_benefit_label")}
+                    </strong>{" "}
+                    {t("quick_answer_benefit")}
+                  </li>
+                </ul>
+                <p className={`mt-3 ${TYPE.meta}`}>
+                  <time dateTime={HOME_LAST_MODIFIED}>
+                    {t("content_updated")}: {HOME_LAST_MODIFIED}
+                  </time>
+                </p>
+              </aside>
+            </header>
+
+            <div className="mt-6 w-full min-w-0 sm:mt-8 lg:col-span-7 lg:mt-0">
+              <ShortsDownloader variant="hero" autoFocus />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Core facts — structured fact chunk */}
+      {/* Core facts */}
       <section
         id="core-facts"
         aria-labelledby="core-facts-title"
         className="border-b border-white/10 bg-slate-950"
       >
-        <div className={`${SECTION} py-8 sm:py-10`}>
-          <h2
-            id="core-facts-title"
-            className="text-center text-lg font-semibold text-white sm:text-xl"
-          >
+        <div className={`${SECTION} py-8 sm:py-10 lg:py-12`}>
+          <h2 id="core-facts-title" className={`text-center sm:text-left ${TYPE.h2}`}>
             {t("core_facts_title")}
           </h2>
-          <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-400">
+          <p className={`mt-2 max-w-3xl text-center sm:text-left ${TYPE.sectionIntro}`}>
             {t("core_facts_intro")}
           </p>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {CORE_FACTS.map(({ icon: Icon, labelKey, detailKey, border, bg, labelColor }) => (
-              <article
-                key={labelKey}
-                className={`rounded-2xl border p-3 text-center sm:p-4 ${border} ${bg}`}
-              >
-                <Icon className={`mx-auto h-4 w-4 ${labelColor}`} strokeWidth={2.25} aria-hidden />
-                <h3 className="mt-2 text-xs font-semibold text-slate-100 sm:text-sm">
-                  {t(labelKey)}
-                </h3>
-                <p className="mt-0.5 text-[10px] leading-snug text-slate-300 sm:text-xs">
-                  {t(detailKey)}
-                </p>
+              <article key={labelKey} className={`rounded-2xl border p-4 sm:p-5 ${border} ${bg}`}>
+                <Icon
+                  className={`h-5 w-5 ${labelColor} sm:h-[1.125rem] sm:w-[1.125rem]`}
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
+                <p className={`mt-2.5 ${TYPE.factLabel} ${labelColor}`}>{t(labelKey)}</p>
+                <p className={`mt-1.5 ${TYPE.factDetail}`}>{t(detailKey)}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How-to — answer-first steps for AI + users */}
+      {/* How-to */}
       <section
         id="how-to"
         aria-labelledby="how-to-title"
         className="border-b border-white/10 bg-slate-950"
       >
-        <div className={`${SECTION} py-10 sm:py-12`}>
-          <h2 id="how-to-title" className="text-center text-lg font-semibold text-white sm:text-xl">
+        <div className={`${SECTION} py-8 sm:py-10 lg:py-12`}>
+          <h2 id="how-to-title" className={`text-center ${TYPE.h2}`}>
             {t("how_to_title")}
           </h2>
-          <p className="mx-auto mt-2 max-w-3xl text-center text-sm leading-relaxed text-slate-400 lg:max-w-7xl">
-            <strong className="text-slate-200">{t("how_to_answer")}</strong>
+          <p className={`mx-auto mt-2 max-w-3xl text-center lg:max-w-4xl ${TYPE.sectionIntro}`}>
+            <strong className="font-semibold text-slate-100">{t("how_to_answer")}</strong>
           </p>
-          <ol className="mx-auto mt-6 max-w-3xl space-y-4 lg:max-w-7xl">
+          <ol className="mx-auto mt-5 max-w-3xl space-y-3 sm:mt-6 sm:space-y-4 lg:mt-8 lg:grid lg:max-w-none lg:grid-cols-3 lg:gap-5 lg:space-y-0">
             {HOW_TO_STEPS.map((key, i) => (
               <li
                 key={key}
-                className="flex gap-4 rounded-2xl border border-white/10 bg-slate-900/45 p-4 sm:p-5"
+                className="flex gap-3 rounded-2xl border border-white/10 bg-slate-900/45 p-4 sm:gap-4 sm:p-5 lg:flex-col lg:gap-3"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500/20 text-sm font-bold text-primary-200">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-500/20 text-primary-200 sm:h-10 sm:w-10 ${TYPE.stepTitle}`}
+                >
                   {i + 1}
                 </span>
-                <div>
-                  <h3 className="font-semibold text-slate-100">{t(`${key}_title`)}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-400">{t(`${key}_body`)}</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className={TYPE.stepTitle}>{t(`${key}_title`)}</h3>
+                  <p className={`mt-1.5 sm:mt-2 ${TYPE.stepBody}`}>{t(`${key}_body`)}</p>
                 </div>
               </li>
             ))}
           </ol>
-          <p className="mx-auto mt-5 max-w-3xl text-center text-xs text-slate-500 lg:max-w-7xl">
-            <strong className="text-slate-400">{t("how_to_takeaway_label")}</strong>{" "}
+          <p className={`mx-auto mt-5 max-w-3xl text-center lg:mt-6 lg:max-w-4xl ${TYPE.meta}`}>
+            <strong className="font-medium text-slate-400">{t("how_to_takeaway_label")}</strong>{" "}
             {t("how_to_takeaway")}
           </p>
         </div>
       </section>
 
-      {/* FAQ — question headings + direct answers */}
+      {/* FAQ */}
       <section
         id="faq"
         aria-labelledby="faq-title"
         className="border-b border-white/10 bg-slate-950"
       >
-        <div className={`${SECTION} py-10 sm:py-12`}>
-          <h2 id="faq-title" className="text-center text-lg font-semibold text-white sm:text-xl">
+        <div className={`${SECTION} py-8 sm:py-10 lg:py-12`}>
+          <h2 id="faq-title" className={`text-center ${TYPE.h2}`}>
             {t("faq_title")}
           </h2>
-          <p className="mx-auto mt-2 max-w-3xl text-center text-sm text-slate-400 lg:max-w-7xl">
+          <p className={`mx-auto mt-2 max-w-3xl text-center lg:max-w-4xl ${TYPE.sectionIntro}`}>
             {t("faq_intro")}
           </p>
-          <dl className="mx-auto mt-6 max-w-3xl divide-y divide-white/10 rounded-2xl border border-white/10 bg-slate-900/45 sm:mt-8 lg:max-w-7xl">
+          <dl className="mx-auto mt-5 max-w-3xl divide-y divide-white/10 rounded-2xl border border-white/10 bg-slate-900/45 sm:mt-6 lg:mt-8 lg:max-w-5xl">
             {HOME_FAQ_ITEMS.map((item) => (
-              <div key={item.question} className="px-4 py-4 sm:px-6 sm:py-5">
-                <dt className="text-sm font-semibold text-slate-100">{item.question}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-slate-400">{item.answer}</dd>
+              <div key={item.question} className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+                <dt className={TYPE.faqQuestion}>{item.question}</dt>
+                <dd className={`mt-2 sm:mt-2.5 ${TYPE.faqAnswer}`}>{item.answer}</dd>
               </div>
             ))}
           </dl>
@@ -216,19 +246,19 @@ export default function Home({ posts = [] }) {
       {/* Blog */}
       {posts.length > 0 && (
         <section className="bg-slate-950" aria-labelledby="blog-section-title">
-          <div className={`${SECTION} py-10 sm:py-12`}>
-            <div className="mb-5 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-              <h2 id="blog-section-title" className="text-lg font-semibold text-white sm:text-xl">
+          <div className={`${SECTION} py-8 sm:py-10 lg:py-12`}>
+            <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between lg:mb-8">
+              <h2 id="blog-section-title" className={TYPE.h2}>
                 {t("hero_blogs_list")}
               </h2>
               <Link
                 href="/blog"
-                className="inline-flex min-h-11 items-center text-sm font-medium text-primary-300 transition hover:text-primary-200 sm:min-h-0"
+                className={`inline-flex min-h-11 items-center sm:min-h-0 ${TYPE.link}`}
               >
                 {t("blog_all_posts")} →
               </Link>
             </div>
-            <div className="home-blog [&_a]:text-primary-300 [&_h3]:text-slate-100 [&_p]:text-slate-400">
+            <div className="home-blog text-sm leading-7 sm:text-base [&_a]:text-primary-300 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-slate-100 sm:[&_h3]:text-lg [&_p]:text-slate-400">
               <ListLayout
                 posts={posts.slice(0, MAX_DISPLAY)}
                 initialDisplayPosts={initialDisplayPosts}
