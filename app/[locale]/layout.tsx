@@ -274,10 +274,6 @@ export default async function RootLayout({
           strategy="afterInteractive"
           crossOrigin="anonymous"
         />
-        <Script
-          src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"
-          strategy="afterInteractive"
-        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ClarityTracker />
           <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
