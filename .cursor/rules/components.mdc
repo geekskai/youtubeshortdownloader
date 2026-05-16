@@ -1,0 +1,13 @@
+---
+description: Shared component guidance for performance, images, and stable rendering
+globs: components/**/*.{ts,tsx,js,jsx}
+alwaysApply: false
+---
+# Components Guide
+
+- Keep shared components presentational unless state is required for interaction.
+- Prefer derived values over `useEffect` + `setState` when the value can be computed during render.
+- Use `components/Image.tsx` for local project images so `BASE_PATH`, lazy loading, and default `sizes` remain consistent.
+- Add explicit `sizes` for repeated or responsive images.
+- Avoid decorative `absolute` background layers in shared components like `Header`, `Footer`, and hero sections.
+- If a visual effect is purely cosmetic, prefer container gradients over extra positioned nodes.

@@ -1,0 +1,13 @@
+---
+description: Layout guidance for stable page structure and mobile-first performance
+globs: layouts/**/*.{ts,tsx,js,jsx},app/**/*layout*.tsx
+alwaysApply: false
+---
+# Layouts Guide
+
+- Layouts should provide stable structure first, then decorative polish.
+- Prefer backgrounds on the layout container itself instead of positioned decorative children.
+- Keep page sections in normal document flow to reduce mobile CLS risk.
+- When a layout renders images, supply fixed dimensions and `sizes`.
+- Blog and list layouts should not mark repeated thumbnails as `priority`.
+- Root and segment layouts should follow Next 16 conventions, including async route params where required.

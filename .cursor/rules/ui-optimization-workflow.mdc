@@ -1,0 +1,28 @@
+---
+globs: *.tsx,*.ts,*.jsx,*.js
+description: Mobile-first UI performance and CLS-safe styling workflow
+---
+
+# UI Optimization Workflow
+
+- Start with mobile CLS and first-screen stability before polishing visuals.
+- Decorative backgrounds should not rely on `absolute` blur blobs when a container gradient can produce the same look.
+- Prefer fewer DOM nodes, fewer heavy blurs, and fewer animated decorative elements on mobile.
+- Keep interactions smooth by animating opacity, color, and transform; avoid layout-affecting animation where possible.
+- Use responsive spacing and typography from the smallest breakpoint upward.
+
+## Preferred Patterns
+
+- Good: `background-image` gradients on the section container.
+- Good: stable cards with fixed padding, border, and shadow.
+- Good: `next/image` with width, height, and `sizes`.
+- Avoid: extra decorative wrappers that sit outside the content flow.
+- Avoid: repeated `priority` images in lists, grids, or carousels.
+- Avoid: large blurred circles positioned with `absolute` for purely cosmetic effects.
+
+## Check Before Finishing
+
+- Does the page remain visually stable on narrow screens?
+- Are decorative layers part of the container background instead of separate positioned nodes?
+- Are hover effects optional and non-essential for mobile UX?
+- Did you verify the affected route in dev mode and run `yarn lint`?

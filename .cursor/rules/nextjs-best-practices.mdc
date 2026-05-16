@@ -1,0 +1,33 @@
+---
+globs: *.tsx,*.ts,app/**/*,components/**/*,layouts/**/*
+description: Next 16 App Router, proxy, async params, and image performance guidance
+---
+
+# Next 16 Best Practices
+
+- Use the App Router conventions already adopted in this repo.
+- Use `proxy.ts` for locale routing and edge request rewriting. Do not add new `middleware.ts`.
+- Treat `params`, `searchParams`, `headers()`, `cookies()`, and `draftMode()` as async-only APIs in Next 16.
+- Use the ESLint CLI with `eslint.config.mjs`; do not add `next lint` back.
+- Keep `next.config.js` compatible with Next 16. Avoid reintroducing removed options such as `eslint`, `swcMinify`, or `optimizeFonts`.
+- This repo currently relies on custom webpack config. Preserve `--webpack` in scripts unless explicitly migrating to Turbopack.
+
+## Performance
+
+- Mobile-first layouts must avoid decorative backgrounds positioned with `absolute` when the same effect can be expressed as layered gradients on the container.
+- Prefer container `background-image` gradients or borders over extra blurred DOM nodes for non-interactive decoration.
+- Do not add full-screen decorative layers like `<div className="fixed inset-0 bg-gradient-...">` inside pages. Apply gradients directly on the page/container element instead.
+- Only use `priority` on one true LCP image per page. Do not mark list, card, or repeated images as priority.
+- Every non-fill image should provide stable dimensions and an appropriate `sizes` value.
+- Prefer the local `components/Image.tsx` wrapper for project images so `BASE_PATH`, lazy loading, and default `sizes` stay consistent.
+
+## Metadata and SEO
+
+- Set `metadataBase` when returning metadata helpers or shared metadata objects.
+- Keep canonical URLs and locale alternates stable after routing changes.
+- After each completed implementation update, sync `app/[locale]/tools/{current}/seoData.ts` `LAST_MODIFIED_ISO` to current local datetime (include time component).
+
+## Validation
+
+- Run `yarn lint` and `yarn build` after Next-specific changes.
+- For performance-sensitive UI work, verify affected mobile routes manually in dev mode.
