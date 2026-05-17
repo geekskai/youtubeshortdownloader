@@ -26,10 +26,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
       type: "website",
     },
     alternates: {
-      canonical: "https://youtubeshortdownloader.com/terms/",
-      languages: {
-        "x-default": "https://youtubeshortdownloader.com/terms/",
-      },
+      canonical: "https://youtubeshortdownloader.com/terms",
       types: {
         "application/rss+xml": `${siteMetadata.siteUrl}/feed.xml`,
       },

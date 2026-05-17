@@ -17,14 +17,14 @@ export const generateMetadata = async (): Promise<Metadata> => {
     openGraph: {
       title: siteMetadata.title,
       description: siteMetadata.description,
-      url: "./",
+      url: "https://youtubeshortdownloader.com/tags",
       siteName: siteMetadata.title,
       images: [siteMetadata.socialBanner],
       locale: "en_US",
       type: "website",
     },
     alternates: {
-      canonical: "./",
+      canonical: "https://youtubeshortdownloader.com/tags",
       types: {
         "application/rss+xml": `${siteMetadata.siteUrl}/feed.xml`,
       },
