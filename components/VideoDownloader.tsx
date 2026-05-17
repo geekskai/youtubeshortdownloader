@@ -304,22 +304,6 @@ export default function VideoDownloader({
         </p>
       </form>
 
-      {isHero && (
-        <ol className="mt-5 grid gap-2 border-t border-white/10 pt-5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/10 sm:pt-6">
-          {(["step_1", "step_2", "step_3"] as const).map((key, i) => (
-            <li
-              key={key}
-              className="flex items-start gap-2.5 sm:flex-col sm:items-center sm:px-3 sm:text-center"
-            >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-500/20 text-[11px] font-bold text-primary-200">
-                {i + 1}
-              </span>
-              <span className="text-xs leading-snug text-slate-400 sm:text-[13px]">{t(key)}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-
       <div
         className={showStatus ? "mt-4 min-h-[4.5rem]" : ""}
         aria-live="polite"
@@ -353,6 +337,22 @@ export default function VideoDownloader({
           />
         ) : null}
       </div>
+
+      {isHero && (
+        <ol className="mt-5 grid gap-2 border-t border-white/10 pt-5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/10 sm:pt-6">
+          {(["step_1", "step_2", "step_3"] as const).map((key, i) => (
+            <li
+              key={key}
+              className="flex items-start gap-2.5 sm:flex-col sm:items-center sm:px-3 sm:text-center"
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-500/20 text-[11px] font-bold text-primary-200">
+                {i + 1}
+              </span>
+              <span className="text-xs leading-snug text-slate-400 sm:text-[13px]">{t(key)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   )
 }
