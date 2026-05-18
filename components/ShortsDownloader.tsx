@@ -232,7 +232,7 @@ export default function ShortsDownloader({
       window.clearInterval(intervalId)
       setDownloading(false)
       setDownloadProgress(0)
-    }, 15000)
+    }, 150000)
   }
 
   const isHero = variant === "hero"
