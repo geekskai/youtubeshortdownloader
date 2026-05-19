@@ -24,6 +24,7 @@ import {
   mapDownloaderApiError,
   type DownloaderApiErrorCode,
 } from "@/components/downloader/shared"
+import { useDownloadRetryCooldown } from "@/components/downloader/useDownloadRetryCooldown"
 import { parseYouTubeUrl } from "@/lib/youtube/parse-url"
 
 type VideoPreview = {
@@ -407,6 +408,8 @@ export default function ShortsDownloader({
   const [quotaState, setQuotaState] = useState<DailyQuotaState | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareLink, setShareLink] = useState("https://youtubeshortdownloader.com?ref=fission_share")
+  const { isDownloadCooldown, cooldownSecondsLeft, startCooldown, clearCooldown } =
+    useDownloadRetryCooldown()
 
   useEffect(() => {
     if (!autoFocus) return
@@ -445,7 +448,8 @@ export default function ShortsDownloader({
     setVideo(null)
     setErrorKey(null)
     resetDownloadState()
-  }, [resetDownloadState])
+    clearCooldown()
+  }, [clearCooldown, resetDownloadState])
 
   const persistQuotaState = useCallback((next: DailyQuotaState) => {
     setQuotaState(next)
@@ -532,18 +536,15 @@ export default function ShortsDownloader({
 
   const handleDownload = async () => {
     const selectedVideo = video
-    if (!selectedVideo || downloading) return
+    if (!selectedVideo || downloading || isDownloadCooldown) return
     const latestQuota = syncDailyQuota()
     if (latestQuota && latestQuota.remainingClicks <= 0) {
       if (latestQuota.sharesCountToday >= MAX_DAILY_SHARE_UNLOCKS) {
         setDownloadError(t("error_quota_exhausted_today"))
+        startCooldown()
       } else {
         setShowShareModal(true)
       }
-      return
-    }
-    if (!DEFAULT_RAPIDAPI_KEY.trim()) {
-      setDownloadError(t("error_missing_rapidapi_key"))
       return
     }
 
@@ -620,6 +621,7 @@ export default function ShortsDownloader({
           ? error.message
           : t("error_download_failed")
       setDownloadError(`${t("error_download_failed")} (${message})`)
+      startCooldown()
     } finally {
       stopProgressSimulation()
       setDownloading(false)
@@ -674,6 +676,11 @@ export default function ShortsDownloader({
       </>
     ) : null
   const canDownload = Boolean(video)
+  const downloadButtonLabel = downloading
+    ? t("downloading")
+    : isDownloadCooldown
+      ? t("download_cooldown", { seconds: cooldownSecondsLeft })
+      : t("button_download")
 
   return (
     <>
@@ -741,7 +748,7 @@ export default function ShortsDownloader({
                 <button
                   type="button"
                   onClick={() => void handleDownload()}
-                  disabled={downloading}
+                  disabled={downloading || isDownloadCooldown}
                   className={`${BTN} order-1 w-full bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-900/30 hover:brightness-110 md:order-2 md:min-w-[136px] lg:min-w-[148px]`}
                 >
                   {downloading ? (
@@ -749,7 +756,7 @@ export default function ShortsDownloader({
                   ) : (
                     <Download className="h-4 w-4" aria-hidden />
                   )}
-                  <span>{downloading ? t("downloading") : t("button_download")}</span>
+                  <span>{downloadButtonLabel}</span>
                 </button>
               ) : (
                 <button

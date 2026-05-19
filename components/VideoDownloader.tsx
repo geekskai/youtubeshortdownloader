@@ -1,7 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Image from "next/image"
+import axios from "axios"
+import fileDownload from "js-file-download"
 import {
   Download,
   Link2,
@@ -12,13 +14,15 @@ import {
   ArrowRight,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { Link } from "@/app/i18n/navigation"
 import {
   fetchYouTubeMetadataClient,
   getDownloaderErrorMessage,
   mapDownloaderApiError,
   type DownloaderApiErrorCode,
 } from "@/components/downloader/shared"
-import { parseYouTubeVideoId } from "@/lib/youtube/parse-url"
+import { useDownloadRetryCooldown } from "@/components/downloader/useDownloadRetryCooldown"
+import { parseYouTubeUrl } from "@/lib/youtube/parse-url"
 
 type VideoPreview = {
   videoId: string
@@ -28,7 +32,18 @@ type VideoPreview = {
   durationSeconds: number | null
 }
 
-type ApiErrorCode = DownloaderApiErrorCode
+type ApiErrorCode = DownloaderApiErrorCode | "shorts_url"
+
+const VIDEO_QUALITY_OPTIONS = [
+  { label: "1080p", value: "137" },
+  { label: "720p", value: "247" },
+  { label: "480p", value: "135" },
+  { label: "360p", value: "134" },
+  { label: "240p", value: "133" },
+] as const
+
+const DEFAULT_VIDEO_QUALITY = "247"
+const VIDEO_QUALITY_LABEL = VIDEO_QUALITY_OPTIONS.map((q) => q.label).join(" / ")
 
 function formatDuration(seconds: number | null): string | null {
   if (seconds == null || seconds <= 0) return null
@@ -39,6 +54,18 @@ function formatDuration(seconds: number | null): string | null {
     return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   }
   return `${m}:${s.toString().padStart(2, "0")}`
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+}
+
+function sanitizeFileName(name: string): string {
+  const normalized = name.trim().replace(/[\\/:*?"<>|]+/g, "_")
+  if (!normalized) return "youtube-video"
+  return normalized
 }
 
 function downloadHref(videoId: string, qualityId: string): string {
@@ -52,47 +79,36 @@ type VideoDownloaderProps = {
 }
 
 const BTN =
-  "inline-flex min-h-11 touch-manipulation items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-[background-color,border-color,opacity] duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30 disabled:cursor-not-allowed disabled:opacity-45"
-const DEFAULT_VIDEO_QUALITY_ID = "247"
+  "inline-flex min-h-11 touch-manipulation items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-semibold leading-none transition-[background-color,border-color,opacity] duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30 disabled:cursor-not-allowed disabled:opacity-45 md:min-h-12 md:text-sm"
+
+type VideoDownloaderT = ReturnType<typeof useTranslations<"VideoDownloader">>
 
 type VideoResultCardProps = {
   video: VideoPreview
-  downloading: boolean
-  downloadProgress: number
-  onDownload: () => void
-  t: ReturnType<typeof useTranslations<"VideoDownloader">>
-  btnClass: string
+  t: VideoDownloaderT
 }
 
-function VideoResultCard({
-  video,
-  downloading,
-  downloadProgress,
-  onDownload,
-  t,
-  btnClass,
-}: VideoResultCardProps) {
+function VideoResultCard({ video, t }: VideoResultCardProps) {
   const duration = formatDuration(video.durationSeconds)
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-primary-500/20 bg-gradient-to-br from-slate-950/90 via-slate-900/50 to-slate-950/90">
-      <header className="border-b border-white/10 px-4 py-2.5 sm:px-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-400/35 bg-primary-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary-100">
+    <article className="overflow-hidden rounded-xl border border-primary-500/20 bg-gradient-to-br from-slate-950/90 via-slate-900/50 to-slate-950/90 md:rounded-2xl">
+      <header className="border-b border-white/10 px-3.5 py-2 md:px-4 md:py-2.5 lg:px-5">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-400/35 bg-primary-500/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary-100 md:px-3 md:text-[11px]">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {t("ready")}
         </span>
       </header>
 
-      <div className="p-4 sm:p-5">
-        {/* Preview row: thumb + meta (mobile & desktop) */}
-        <div className="flex gap-3.5 sm:gap-5">
+      <div className="p-3.5 md:p-4 lg:p-5">
+        <div className="flex gap-3 md:gap-4 lg:gap-5">
           {video.thumbnail ? (
-            <div className="relative h-[72px] w-[128px] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black shadow-lg shadow-black/40 sm:h-[90px] sm:w-[160px]">
+            <div className="relative h-[72px] w-[128px] shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black shadow-lg shadow-black/40 md:h-[84px] md:w-[150px] md:rounded-xl lg:h-[90px] lg:w-[160px]">
               <Image
                 src={video.thumbnail}
                 alt=""
                 fill
-                sizes="(max-width: 640px) 128px, 160px"
+                sizes="(max-width: 767px) 128px, (max-width: 1023px) 150px, 160px"
                 className="object-cover"
                 unoptimized
               />
@@ -104,7 +120,7 @@ function VideoResultCard({
             </div>
           ) : (
             <div
-              className="flex h-[72px] w-[128px] shrink-0 items-center justify-center rounded-xl border border-dashed border-white/15 bg-slate-900/80 sm:h-[90px] sm:w-[160px]"
+              className="flex h-[72px] w-[128px] shrink-0 items-center justify-center rounded-lg border border-dashed border-white/15 bg-slate-900/80 md:h-[84px] md:w-[150px] md:rounded-xl lg:h-[90px] lg:w-[160px]"
               aria-hidden
             >
               <Download className="h-8 w-8 text-slate-600" />
@@ -112,50 +128,100 @@ function VideoResultCard({
           )}
 
           <div className="flex min-w-0 flex-1 flex-col justify-center text-left">
-            <h3 className="line-clamp-3 text-[15px] font-semibold leading-snug text-slate-50 sm:line-clamp-2 sm:text-base">
+            <h3 className="line-clamp-3 text-base font-semibold leading-5 text-slate-50 md:line-clamp-2 md:text-lg md:leading-snug lg:text-xl">
               {video.title}
             </h3>
             {video.author && (
-              <p className="mt-1.5 line-clamp-2 text-sm text-slate-400">{video.author}</p>
+              <p className="mt-1 line-clamp-2 text-base leading-5 text-slate-400 md:text-lg">
+                {video.author}
+              </p>
             )}
           </div>
         </div>
 
-        <div className="mt-4 border-t border-white/10 pt-4 sm:mt-5 sm:pt-5">
-          <button
-            type="button"
-            onClick={onDownload}
-            disabled={downloading}
-            className={`${btnClass} w-full bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-3.5 text-base text-white shadow-lg shadow-primary-900/25 hover:brightness-110`}
-          >
-            {downloading ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-            ) : (
-              <Download className="h-5 w-5" aria-hidden />
-            )}
-            <span>{downloading ? t("downloading") : t("button_download")}</span>
-          </button>
-          {downloading ? (
-            <div className="mt-3">
-              <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
-                <span>Preparing file...</span>
-                <span>{downloadProgress}%</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary-500 to-cyan-400 transition-[width] duration-500"
-                  style={{ width: `${downloadProgress}%` }}
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-500 sm:text-left">
-          {t("download_note")}
+        <p className="mt-3 border-t border-white/10 pt-3 text-center text-xs leading-relaxed text-yellow-500 md:mt-4 md:pt-4 md:text-left md:text-base">
+          {t("download_note", { qualities: VIDEO_QUALITY_LABEL })}
         </p>
       </div>
     </article>
+  )
+}
+
+type DownloadFeedbackProps = {
+  loading: boolean
+  downloading: boolean
+  errorMessage: string | null
+  errorExtra?: ReactNode
+  downloadError: string | null
+  downloadSuccess: string | null
+  downloadProgress: number
+  t: VideoDownloaderT
+}
+
+function DownloadFeedback({
+  loading,
+  downloading,
+  errorMessage,
+  errorExtra,
+  downloadError,
+  downloadSuccess,
+  downloadProgress,
+  t,
+}: DownloadFeedbackProps) {
+  return (
+    <div className="mb-3.5 md:mb-4" aria-live="polite" aria-busy={loading || downloading}>
+      {errorMessage ? (
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-2.5 text-[13px] leading-5 text-orange-100 md:px-3.5 md:py-3 md:text-sm"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-orange-300" aria-hidden />
+          <p>
+            {errorMessage}
+            {errorExtra}
+          </p>
+        </div>
+      ) : null}
+
+      {loading ? (
+        <p className="flex items-center justify-center gap-2 py-2 text-[13px] text-slate-400 md:text-sm">
+          <Loader2 className="h-4 w-4 animate-spin text-primary-400" aria-hidden />
+          {t("loading")}
+        </p>
+      ) : null}
+
+      {downloading ? (
+        <div className="mt-2 rounded-xl border border-primary-500/25 bg-primary-500/10 px-3 py-2.5 md:px-3.5 md:py-3">
+          <div className="mb-1.5 flex items-center justify-between text-xs text-slate-300">
+            <span>{t("download_progress_label")}</span>
+            <span>{downloadProgress}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary-500 to-cyan-400 transition-[width] duration-300"
+              style={{ width: `${downloadProgress}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {downloadError ? (
+        <div
+          role="alert"
+          className="mt-2 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-[13px] leading-5 text-rose-100 md:px-3.5 md:py-3 md:text-sm"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" aria-hidden />
+          <p>{downloadError}</p>
+        </div>
+      ) : null}
+
+      {downloadSuccess ? (
+        <div className="mt-2 flex items-start gap-2.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2.5 text-[13px] leading-5 text-emerald-100 md:px-3.5 md:py-3 md:text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden />
+          <p>{downloadSuccess}</p>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -165,12 +231,18 @@ export default function VideoDownloader({
 }: VideoDownloaderProps) {
   const t = useTranslations("VideoDownloader")
   const inputRef = useRef<HTMLInputElement>(null)
+  const progressTimerRef = useRef<number | null>(null)
   const [url, setUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
+  const [quality, setQuality] = useState<string>(DEFAULT_VIDEO_QUALITY)
   const [errorKey, setErrorKey] = useState<ApiErrorCode | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null)
   const [video, setVideo] = useState<VideoPreview | null>(null)
+  const { isDownloadCooldown, cooldownSecondsLeft, startCooldown, clearCooldown } =
+    useDownloadRetryCooldown()
 
   useEffect(() => {
     if (!autoFocus) return
@@ -178,14 +250,53 @@ export default function VideoDownloader({
     if (mq.matches) inputRef.current?.focus({ preventScroll: true })
   }, [autoFocus])
 
+  const stopProgressSimulation = useCallback(() => {
+    if (progressTimerRef.current !== null) {
+      window.clearInterval(progressTimerRef.current)
+      progressTimerRef.current = null
+    }
+  }, [])
+
+  const startProgressSimulation = useCallback(() => {
+    stopProgressSimulation()
+    progressTimerRef.current = window.setInterval(() => {
+      setDownloadProgress((prev) => {
+        if (prev >= 99) return 99
+        if (prev < 25) return Math.min(prev + 4, 99)
+        if (prev < 55) return Math.min(prev + 2, 99)
+        if (prev < 85) return Math.min(prev + 1, 99)
+        return Math.min(prev + (Math.random() < 0.32 ? 1 : 0), 99)
+      })
+    }, 180)
+  }, [stopProgressSimulation])
+
+  const resetDownloadState = useCallback(() => {
+    stopProgressSimulation()
+    setDownloadError(null)
+    setDownloadSuccess(null)
+    setDownloadProgress(0)
+  }, [stopProgressSimulation])
+
+  const resetPreviewState = useCallback(() => {
+    setVideo(null)
+    setErrorKey(null)
+    resetDownloadState()
+    clearCooldown()
+  }, [clearCooldown, resetDownloadState])
+
   const fetchVideo = useCallback(async () => {
     setErrorKey(null)
+    resetDownloadState()
     setVideo(null)
-    setDownloadProgress(0)
     setLoading(true)
 
     try {
-      const videoId = parseYouTubeVideoId(url.trim())
+      const parsed = parseYouTubeUrl(url.trim())
+      if (parsed?.kind === "shorts") {
+        setErrorKey("shorts_url")
+        return
+      }
+      const videoId = parsed?.kind === "video" ? parsed.videoId : null
       if (!videoId) {
         setErrorKey("invalid_url")
         return
@@ -204,7 +315,7 @@ export default function VideoDownloader({
     } finally {
       setLoading(false)
     }
-  }, [url])
+  }, [resetDownloadState, url])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -217,6 +328,7 @@ export default function VideoDownloader({
       const text = await navigator.clipboard.readText()
       if (text.trim()) {
         setUrl(text.trim())
+        resetPreviewState()
         inputRef.current?.focus()
       }
     } catch {
@@ -224,38 +336,152 @@ export default function VideoDownloader({
     }
   }
 
-  const handleDownload = () => {
-    if (!video || downloading) return
+  const handleDownload = async () => {
+    const selectedVideo = video
+    if (!selectedVideo || downloading || isDownloadCooldown) return
+
+    setDownloadError(null)
+    setDownloadSuccess(null)
     setDownloading(true)
-    setDownloadProgress(10)
-    const intervalId = window.setInterval(() => {
-      setDownloadProgress((current) => Math.min(current + 8, 90))
-    }, 350)
-    window.location.assign(downloadHref(video.videoId, DEFAULT_VIDEO_QUALITY_ID))
-    window.setTimeout(() => {
-      window.clearInterval(intervalId)
-      setDownloading(false)
+    setDownloadProgress(6)
+    startProgressSimulation()
+
+    try {
+      const initRes = await fetch(downloadHref(selectedVideo.videoId, quality), {
+        redirect: "manual",
+        cache: "no-store",
+      })
+
+      if (initRes.status !== 302) {
+        const body = (await initRes.json().catch(() => ({}))) as {
+          error?: string
+          message?: string
+        }
+        throw new Error(body.message || body.error || `Download failed (${initRes.status})`)
+      }
+
+      const fileUrl = initRes.headers.get("Location")
+      if (!fileUrl) {
+        throw new Error("No download URL returned")
+      }
+
+      const response = await axios({
+        url: fileUrl,
+        method: "GET",
+        responseType: "blob",
+        onDownloadProgress: (progressEvent) => {
+          const total = progressEvent.total
+          if (typeof total === "number" && Number.isFinite(total) && total > 0) {
+            const actualPct = Math.round((progressEvent.loaded / total) * 100)
+            if (actualPct >= 100 || progressEvent.loaded >= total) return
+            setDownloadProgress((prev) => {
+              const guidedPct = actualPct < 25 ? actualPct + 8 : actualPct + 4
+              return Math.min(99, Math.max(prev, guidedPct, 12))
+            })
+            return
+          }
+
+          if (typeof progressEvent.progress === "number") {
+            const actualPct = Math.round(progressEvent.progress * 100)
+            if (actualPct >= 100) return
+            setDownloadProgress((prev) => Math.min(99, Math.max(prev, actualPct + 4, 12)))
+          }
+        },
+      })
+
+      const contentType = String(response.headers["content-type"] || "")
+      if (!contentType.includes("octet-stream") && !contentType.includes("video")) {
+        const maybeText = await response.data.text()
+        throw new Error(maybeText?.slice(0, 200) || "Invalid media response")
+      }
+
+      const blob = response.data as Blob
+      const fileName = `${sanitizeFileName(selectedVideo.title)}.mp4`
+
+      stopProgressSimulation()
+      setDownloadProgress(100)
+      fileDownload(blob, fileName)
+
+      setDownloadSuccess(
+        t("download_success", {
+          filename: fileName,
+          size: formatBytes(blob.size),
+        })
+      )
+      setVideo(null)
+    } catch (error) {
       setDownloadProgress(0)
-    }, 15000)
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message ||
+          error.response?.statusText ||
+          error.message ||
+          t("error_download_failed")
+        : error instanceof Error
+          ? error.message
+          : t("error_download_failed")
+      setDownloadError(`${t("error_download_failed")} (${message})`)
+      startCooldown()
+    } finally {
+      stopProgressSimulation()
+      setDownloading(false)
+    }
   }
+
+  useEffect(() => () => stopProgressSimulation(), [stopProgressSimulation])
 
   const isHero = variant === "hero"
   const shellClass = isHero
-    ? "w-full rounded-2xl border border-white/10 bg-slate-900/50 p-4 backdrop-blur-sm sm:p-6"
-    : "mx-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-900/50 p-4 backdrop-blur-sm sm:p-8"
+    ? "w-full rounded-xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-sm md:rounded-2xl md:p-5 lg:p-6"
+    : "mx-auto w-full max-w-2xl rounded-xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-sm md:max-w-3xl md:rounded-2xl md:p-6 lg:max-w-4xl lg:p-8"
 
-  const errorMessage = getDownloaderErrorMessage(t, errorKey)
-
-  const showStatus = Boolean(loading || video || errorMessage)
+  const errorMessage =
+    errorKey === "shorts_url"
+      ? t("error_shorts_url")
+      : getDownloaderErrorMessage(t, errorKey as DownloaderApiErrorCode | null)
+  const errorExtra =
+    errorKey === "shorts_url" ? (
+      <>
+        {" "}
+        <Link
+          href="/"
+          className="font-medium text-orange-200 underline decoration-orange-300/60 underline-offset-2 transition hover:text-white"
+        >
+          {t("error_shorts_link")}
+        </Link>
+      </>
+    ) : null
+  const canDownload = Boolean(video)
+  const downloadButtonLabel = downloading
+    ? t("downloading")
+    : isDownloadCooldown
+      ? t("download_cooldown", { seconds: cooldownSecondsLeft })
+      : t("button_download")
 
   return (
     <div className={shellClass}>
+      {video ? (
+        <div className="mb-2 md:mb-4">
+          <VideoResultCard video={video} t={t} />
+        </div>
+      ) : null}
+
+      <DownloadFeedback
+        loading={loading}
+        downloading={downloading}
+        errorMessage={errorMessage}
+        errorExtra={errorExtra}
+        downloadError={downloadError}
+        downloadSuccess={downloadSuccess}
+        downloadProgress={downloadProgress}
+        t={t}
+      />
+
       <form onSubmit={handleSubmit}>
         <label htmlFor="video-url" className="sr-only">
           {t("input_label")}
         </label>
 
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-stretch md:gap-3">
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-[minmax(0,1fr)_150px_auto] md:items-stretch md:gap-3 lg:grid-cols-[minmax(0,1fr)_170px_auto] lg:gap-4">
           <div className="relative min-w-0 flex-1">
             <Link2
               className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-500"
@@ -270,28 +496,61 @@ export default function VideoDownloader({
               enterKeyHint="go"
               placeholder={t("input_placeholder")}
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-slate-950/60 py-3 pl-10 pr-3 text-base text-slate-100 transition-[border-color,box-shadow] duration-200 placeholder:text-slate-500 focus:border-primary-400/60 focus:outline-none focus:ring-4 focus:ring-primary-500/20 md:min-h-12 md:py-3.5 md:pl-11 md:pr-4"
+              onChange={(e) => {
+                setUrl(e.target.value)
+                resetPreviewState()
+              }}
+              className="w-full rounded-xl border border-white/15 bg-slate-950/60 py-3 pl-10 pr-3 text-[15px] leading-6 text-slate-100 transition-[border-color,box-shadow] duration-200 placeholder:text-slate-500 focus:border-primary-400/60 focus:outline-none focus:ring-4 focus:ring-primary-500/20 md:min-h-12 md:py-3.5 md:pl-11 md:pr-4 md:text-base"
             />
           </div>
 
-          <div className="flex flex-col gap-2 md:shrink-0 md:flex-row md:gap-2">
-            <button
-              type="submit"
-              disabled={loading || !url.trim()}
-              className={`${BTN} order-1 w-full bg-gradient-to-r from-primary-600 to-primary-500 px-5 text-white shadow-lg shadow-primary-900/30 hover:brightness-110 md:order-2 md:min-w-[132px]`}
+          <div className="relative min-w-0">
+            <select
+              value={quality}
+              onChange={(e) => setQuality(e.target.value)}
+              className="w-full rounded-xl border border-white/15 bg-slate-950/60 py-3 pl-3 pr-3 text-[14px] text-slate-100 transition-[border-color,box-shadow] duration-200 focus:border-primary-400/60 focus:outline-none focus:ring-4 focus:ring-primary-500/20 md:min-h-12 md:py-3.5 md:text-sm"
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              ) : (
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              )}
-              <span>{loading ? t("loading") : t("button_fetch")}</span>
-            </button>
+              {VIDEO_QUALITY_OPTIONS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2 md:shrink-0 md:flex-row md:items-stretch md:gap-2">
+            {canDownload ? (
+              <button
+                type="button"
+                onClick={() => void handleDownload()}
+                disabled={downloading || isDownloadCooldown}
+                className={`${BTN} order-1 w-full bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-900/30 hover:brightness-110 md:order-2 md:min-w-[136px] lg:min-w-[148px]`}
+              >
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <Download className="h-4 w-4" aria-hidden />
+                )}
+                <span>{downloadButtonLabel}</span>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading || !url.trim()}
+                className={`${BTN} order-1 w-full bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-900/30 hover:brightness-110 md:order-2 md:min-w-[136px] lg:min-w-[148px]`}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                )}
+                <span>{loading ? t("loading") : t("button_fetch")}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => void handlePaste()}
-              className={`${BTN} order-2 w-full border border-white/15 bg-slate-800/50 px-4 font-medium text-slate-200 hover:border-primary-400/40 hover:bg-slate-800 md:order-1 md:w-auto`}
+              className={`${BTN} order-2 w-full border border-white/15 bg-slate-800/50 font-medium text-slate-200 hover:border-primary-400/40 hover:bg-slate-800 md:order-1 md:w-auto`}
             >
               <ClipboardPaste className="h-4 w-4" aria-hidden />
               {t("button_paste")}
@@ -299,47 +558,13 @@ export default function VideoDownloader({
           </div>
         </div>
 
-        <p className="mt-2 text-center text-xs leading-relaxed text-slate-500 md:text-left">
-          {t("hint")}
+        <p className="mt-2 text-center text-[11px] leading-relaxed text-green-500 md:mt-2.5 md:text-left md:text-base">
+          {t("hint", { qualities: VIDEO_QUALITY_LABEL })}
         </p>
       </form>
 
-      <div
-        className={showStatus ? "mt-4 min-h-[4.5rem]" : ""}
-        aria-live="polite"
-        aria-busy={loading}
-      >
-        {errorMessage && (
-          <div
-            role="alert"
-            className="flex items-start gap-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3.5 py-3 text-sm text-orange-100"
-          >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-orange-300" aria-hidden />
-            <p>{errorMessage}</p>
-          </div>
-        )}
-
-        {loading && !video && (
-          <p className="flex items-center justify-center gap-2 py-2 text-sm text-slate-400">
-            <Loader2 className="h-4 w-4 animate-spin text-primary-400" aria-hidden />
-            {t("loading")}
-          </p>
-        )}
-
-        {video ? (
-          <VideoResultCard
-            video={video}
-            downloading={downloading}
-            downloadProgress={downloadProgress}
-            onDownload={handleDownload}
-            t={t}
-            btnClass={BTN}
-          />
-        ) : null}
-      </div>
-
       {isHero && (
-        <ol className="mt-5 grid gap-2 border-t border-white/10 pt-5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/10 sm:pt-6">
+        <ol className="mt-5 grid gap-2 border-t border-white/10 pt-5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/10 sm:pt-6 md:mt-6 lg:mt-7">
           {(["step_1", "step_2", "step_3"] as const).map((key, i) => (
             <li
               key={key}
@@ -348,7 +573,9 @@ export default function VideoDownloader({
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-500/20 text-[11px] font-bold text-primary-200">
                 {i + 1}
               </span>
-              <span className="text-xs leading-snug text-slate-400 sm:text-[13px]">{t(key)}</span>
+              <span className="text-xs leading-snug text-slate-400 sm:text-[13px] md:text-sm">
+                {t(key)}
+              </span>
             </li>
           ))}
         </ol>
