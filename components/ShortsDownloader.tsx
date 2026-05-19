@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Image from "next/image"
 import axios from "axios"
 import fileDownload from "js-file-download"
@@ -17,13 +17,14 @@ import {
   X,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { Link } from "@/app/i18n/navigation"
 import {
   fetchYouTubeMetadataClient,
   getDownloaderErrorMessage,
   mapDownloaderApiError,
   type DownloaderApiErrorCode,
 } from "@/components/downloader/shared"
-import { parseYouTubeVideoId } from "@/lib/youtube/parse-url"
+import { parseYouTubeUrl } from "@/lib/youtube/parse-url"
 
 type VideoPreview = {
   videoId: string
@@ -33,7 +34,7 @@ type VideoPreview = {
   durationSeconds: number | null
 }
 
-type ApiErrorCode = DownloaderApiErrorCode
+type ApiErrorCode = DownloaderApiErrorCode | "regular_video_url"
 
 function formatDuration(seconds: number | null): string | null {
   if (seconds == null || seconds <= 0) return null
@@ -185,6 +186,7 @@ type DownloadFeedbackProps = {
   loading: boolean
   downloading: boolean
   errorMessage: string | null
+  errorExtra?: ReactNode
   downloadError: string | null
   downloadSuccess: string | null
   downloadProgress: number
@@ -195,6 +197,7 @@ function DownloadFeedback({
   loading,
   downloading,
   errorMessage,
+  errorExtra,
   downloadError,
   downloadSuccess,
   downloadProgress,
@@ -208,7 +211,10 @@ function DownloadFeedback({
           className="flex items-start gap-2.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-2.5 text-[13px] leading-5 text-orange-100 md:px-3.5 md:py-3 md:text-sm"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-orange-300" aria-hidden />
-          <p>{errorMessage}</p>
+          <p>
+            {errorMessage}
+            {errorExtra}
+          </p>
         </div>
       ) : null}
 
@@ -479,7 +485,12 @@ export default function ShortsDownloader({
     setLoading(true)
 
     try {
-      const videoId = parseYouTubeVideoId(url.trim())
+      const parsed = parseYouTubeUrl(url.trim())
+      if (parsed?.kind === "video") {
+        setErrorKey("regular_video_url")
+        return
+      }
+      const videoId = parsed?.kind === "shorts" ? parsed.videoId : null
       if (!videoId) {
         setErrorKey("invalid_url")
         return
@@ -645,7 +656,23 @@ export default function ShortsDownloader({
     ? "w-full rounded-xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-sm md:rounded-2xl md:p-5 lg:p-6"
     : "mx-auto w-full max-w-2xl rounded-xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-sm md:max-w-3xl md:rounded-2xl md:p-6 lg:max-w-4xl lg:p-8"
 
-  const errorMessage = getDownloaderErrorMessage(t, errorKey)
+  const errorMessage =
+    errorKey === "regular_video_url"
+      ? t("error_regular_video_url")
+      : getDownloaderErrorMessage(t, errorKey as DownloaderApiErrorCode | null)
+  const errorExtra =
+    errorKey === "regular_video_url" ? (
+      <>
+        {" "}
+        <Link
+          target="_blank"
+          href="/youtube-video-downloader"
+          className="font-medium text-orange-200 underline decoration-orange-300/60 underline-offset-2 transition hover:text-white"
+        >
+          {t("error_regular_video_link")}
+        </Link>
+      </>
+    ) : null
   const canDownload = Boolean(video)
 
   return (
@@ -661,6 +688,7 @@ export default function ShortsDownloader({
           loading={loading}
           downloading={downloading}
           errorMessage={errorMessage}
+          errorExtra={errorExtra}
           downloadError={downloadError}
           downloadSuccess={downloadSuccess}
           downloadProgress={downloadProgress}
