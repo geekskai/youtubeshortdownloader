@@ -600,6 +600,7 @@ export default function ShortsDownloader({
     const requestUrl = `https://${RAPIDAPI_HOST}/download-short-mp4/${selectedVideo.videoId}?quality=${quality}`
 
     try {
+      console.log("log:", `g${process.env.NEXT_PUBLIC_RAPIDAPI_KEY_SHORTS}k`)
       const response = await axios({
         url: requestUrl,
         method: "GET",
