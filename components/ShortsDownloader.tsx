@@ -59,7 +59,7 @@ type ShortsDownloaderProps = {
 const BTN =
   "inline-flex min-h-11 touch-manipulation items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-semibold leading-none transition-[background-color,border-color,opacity] duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30 disabled:cursor-not-allowed disabled:opacity-45 md:min-h-12 md:text-sm"
 const RAPIDAPI_HOST = "youtube-shorts-video-downloader-and-converter.p.rapidapi.com"
-const DEFAULT_RAPIDAPI_KEY = process.env.NEXT_PUBLIC_RAPIDAPI_KEY_SHORTS?.trim() ?? ""
+
 const DEFAULT_SHORTS_QUALITY = "360p"
 const SHORTS_QUALITY_OPTIONS = ["144p", "240p", "360p", "480p", "720p", "1080p"] as const
 const SHORTS_QUALITY_LABEL = SHORTS_QUALITY_OPTIONS.join(" / ")
@@ -606,7 +606,7 @@ export default function ShortsDownloader({
         responseType: "blob",
         headers: {
           "x-rapidapi-host": RAPIDAPI_HOST,
-          "x-rapidapi-key": DEFAULT_RAPIDAPI_KEY.trim(),
+          "x-rapidapi-key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY_SHORTS,
         },
         onDownloadProgress: (progressEvent) => {
           const total = progressEvent.total
