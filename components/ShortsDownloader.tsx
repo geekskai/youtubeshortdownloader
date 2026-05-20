@@ -17,7 +17,8 @@ import {
   X,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { Link } from "@/app/i18n/navigation"
+import { useSearchParams } from "next/navigation"
+import { useRouter } from "@/app/i18n/navigation"
 import {
   fetchYouTubeMetadataClient,
   getDownloaderErrorMessage,
@@ -35,7 +36,13 @@ type VideoPreview = {
   durationSeconds: number | null
 }
 
-type ApiErrorCode = DownloaderApiErrorCode | "regular_video_url"
+type ApiErrorCode = DownloaderApiErrorCode
+
+const VIDEO_DOWNLOADER_PATH = "/youtube-video-downloader"
+
+function buildVideoDownloaderHref(videoUrl: string): string {
+  return `${VIDEO_DOWNLOADER_PATH}?url=${encodeURIComponent(videoUrl.trim())}`
+}
 
 function formatDuration(seconds: number | null): string | null {
   if (seconds == null || seconds <= 0) return null
@@ -394,6 +401,9 @@ export default function ShortsDownloader({
   autoFocus = false,
 }: ShortsDownloaderProps) {
   const t = useTranslations("ShortsDownloader")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const initializedFromQuery = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const progressTimerRef = useRef<number | null>(null)
   const [url, setUrl] = useState("")
@@ -482,53 +492,86 @@ export default function ShortsDownloader({
     setShareLink(`${origin}${pathname}?ref=fission_share`)
   }, [syncDailyQuota])
 
-  const fetchVideo = useCallback(async () => {
-    setErrorKey(null)
-    resetDownloadState()
-    setVideo(null)
-    setLoading(true)
+  const redirectToVideoDownloader = useCallback(
+    (videoUrl: string) => {
+      router.push(buildVideoDownloaderHref(videoUrl))
+    },
+    [router]
+  )
 
-    try {
-      const parsed = parseYouTubeUrl(url.trim())
+  const fetchVideo = useCallback(
+    async (inputUrl?: string) => {
+      const trimmed = (inputUrl ?? url).trim()
+      setErrorKey(null)
+      resetDownloadState()
+      setVideo(null)
+
+      const parsed = parseYouTubeUrl(trimmed)
       if (parsed?.kind === "video") {
-        setErrorKey("regular_video_url")
-        return
-      }
-      const videoId = parsed?.kind === "shorts" ? parsed.videoId : null
-      if (!videoId) {
-        setErrorKey("invalid_url")
+        redirectToVideoDownloader(trimmed)
         return
       }
 
-      const metadata = await fetchYouTubeMetadataClient(videoId, "YouTube Short")
-      setVideo({
-        videoId: metadata.videoId,
-        title: metadata.title,
-        thumbnail: metadata.thumbnail,
-        author: metadata.author,
-        durationSeconds: metadata.durationSeconds,
-      })
-    } catch (error) {
-      setErrorKey(mapDownloaderApiError(error instanceof Error ? error.message : undefined))
-    } finally {
-      setLoading(false)
+      setLoading(true)
+
+      try {
+        const videoId = parsed?.kind === "shorts" ? parsed.videoId : null
+        if (!videoId) {
+          setErrorKey("invalid_url")
+          return
+        }
+
+        const metadata = await fetchYouTubeMetadataClient(videoId, "YouTube Short")
+        setVideo({
+          videoId: metadata.videoId,
+          title: metadata.title,
+          thumbnail: metadata.thumbnail,
+          author: metadata.author,
+          durationSeconds: metadata.durationSeconds,
+        })
+      } catch (error) {
+        setErrorKey(mapDownloaderApiError(error instanceof Error ? error.message : undefined))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [redirectToVideoDownloader, resetDownloadState, url]
+  )
+
+  useEffect(() => {
+    if (initializedFromQuery.current) return
+    const incoming = searchParams.get("url")?.trim()
+    if (!incoming) return
+    const parsed = parseYouTubeUrl(incoming)
+    if (parsed?.kind === "video") {
+      initializedFromQuery.current = true
+      redirectToVideoDownloader(incoming)
+      return
     }
-  }, [resetDownloadState, url])
+    if (parsed?.kind !== "shorts") return
+    initializedFromQuery.current = true
+    setUrl(incoming)
+    void fetchVideo(incoming)
+  }, [fetchVideo, redirectToVideoDownloader, searchParams])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!url.trim() || loading) return
-    void fetchVideo()
+    void fetchVideo(url.trim())
   }
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText()
-      if (text.trim()) {
-        setUrl(text.trim())
-        resetPreviewState()
-        inputRef.current?.focus()
+      const trimmed = text.trim()
+      if (!trimmed) return
+      if (parseYouTubeUrl(trimmed)?.kind === "video") {
+        redirectToVideoDownloader(trimmed)
+        return
       }
+      setUrl(trimmed)
+      resetPreviewState()
+      inputRef.current?.focus()
     } catch {
       inputRef.current?.focus()
     }
@@ -658,23 +701,7 @@ export default function ShortsDownloader({
     ? "w-full rounded-xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-sm md:rounded-2xl md:p-5 lg:p-6"
     : "mx-auto w-full max-w-2xl rounded-xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-sm md:max-w-3xl md:rounded-2xl md:p-6 lg:max-w-4xl lg:p-8"
 
-  const errorMessage =
-    errorKey === "regular_video_url"
-      ? t("error_regular_video_url")
-      : getDownloaderErrorMessage(t, errorKey as DownloaderApiErrorCode | null)
-  const errorExtra =
-    errorKey === "regular_video_url" ? (
-      <>
-        {" "}
-        <Link
-          target="_blank"
-          href="/youtube-video-downloader"
-          className="font-medium text-orange-200 underline decoration-orange-300/60 underline-offset-2 transition hover:text-white"
-        >
-          {t("error_regular_video_link")}
-        </Link>
-      </>
-    ) : null
+  const errorMessage = getDownloaderErrorMessage(t, errorKey)
   const canDownload = Boolean(video)
   const downloadButtonLabel = downloading
     ? t("downloading")
@@ -695,7 +722,6 @@ export default function ShortsDownloader({
           loading={loading}
           downloading={downloading}
           errorMessage={errorMessage}
-          errorExtra={errorExtra}
           downloadError={downloadError}
           downloadSuccess={downloadSuccess}
           downloadProgress={downloadProgress}
