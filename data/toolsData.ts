@@ -87,7 +87,7 @@ export const toolsData: ToolData[] = [
     description:
       "Convert YouTube Shorts links into downloadable MP4 files with a simple paste-and-save flow built for creators and editors.",
     icon: Video,
-    href: "/",
+    href: "/youtube-shorts-to-mp4",
     features: [
       "MP4 output for editing and archiving",
       "Quick copy-ready download links",
@@ -97,6 +97,24 @@ export const toolsData: ToolData[] = [
     badge: "MP4",
     badgeColor: "bg-cyan-500",
     gradient: gradients.creative,
+    category: "Downloader",
+  },
+  {
+    id: "shorts-to-webm",
+    title: "Shorts to WebM",
+    description:
+      "Convert YouTube Shorts links into downloadable WebM files with a simple paste-and-save flow built for web playback and editing.",
+    icon: Video,
+    href: "/youtube-shorts-to-webm",
+    features: [
+      "WebM output for web and editing workflows",
+      "Quick copy-ready download links",
+      "Works from phone, tablet, or desktop",
+      "Free with no sign-up",
+    ],
+    badge: "WebM",
+    badgeColor: "bg-teal-500",
+    gradient: gradients.utility,
     category: "Downloader",
   },
   {

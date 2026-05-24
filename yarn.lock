@@ -2952,6 +2952,7 @@ __metadata:
 "@next/swc-darwin-x64@npm:16.2.4":
   version: 16.2.4
   resolution: "@next/swc-darwin-x64@npm:16.2.4"
+  checksum: 8bebfa62dcb6fe2976f0b1ca79e77288da6b8591af11ab2750d8fd44f22283532662f57e6b07e71b7f695f76d8a7e2ce4ae442ab4ac8244b15d8c15c6124904f
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -13683,6 +13684,7 @@ __metadata:
     "@headlessui/react": 2.2.10
     "@microsoft/clarity": ^1.0.2
     "@next/bundle-analyzer": 16.2.4
+    "@next/swc-darwin-x64": 16.2.4
     "@svgr/webpack": ^8.0.1
     "@tailwindcss/forms": ^0.5.7
     "@tailwindcss/typography": ^0.5.12

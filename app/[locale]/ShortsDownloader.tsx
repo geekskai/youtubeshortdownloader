@@ -54,6 +54,7 @@ function formatDuration(seconds: number | null): string | null {
 type ShortsDownloaderProps = {
   variant?: "hero" | "default"
   autoFocus?: boolean
+  shortsType?: "mp4" | "webm"
 }
 
 const BTN =
@@ -401,8 +402,9 @@ function ShareModal({ isOpen, shareLink, unlockAmount, t, onClose, onUnlock }: S
 export default function ShortsDownloader({
   variant = "default",
   autoFocus = false,
+  shortsType = "mp4",
 }: ShortsDownloaderProps) {
-  const t = useTranslations("ShortsDownloader")
+  const t = useTranslations(shortsType === "webm" ? "ShortsDownloaderWebm" : "ShortsDownloader")
   const router = useRouter()
   const searchParams = useSearchParams()
   const initializedFromQuery = useRef(false)
@@ -596,7 +598,7 @@ export default function ShortsDownloader({
     setDownloadProgress(6)
     startProgressSimulation()
 
-    const requestUrl = `https://${RAPIDAPI_HOST}/download-short-mp4/${selectedVideo.videoId}?quality=${quality}`
+    const requestUrl = `https://${RAPIDAPI_HOST}/download-short-${shortsType}/${selectedVideo.videoId}?quality=${quality}`
 
     try {
       const response = await axios({
@@ -614,7 +616,7 @@ export default function ShortsDownloader({
         throw new Error(maybeText?.slice(0, 200) || "Invalid media response")
       }
       const blob = response.data
-      const fileName = `${sanitizeFileName(selectedVideo.title)}.mp4`
+      const fileName = `${sanitizeFileName(selectedVideo.title)}.${shortsType}`
 
       stopProgressSimulation()
       setDownloadProgress(100)
