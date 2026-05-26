@@ -1,9 +1,6 @@
 import { Metadata } from "next"
 import { getTranslations, setRequestLocale } from "next-intl/server"
-import {
-  SHORTS_TO_MP4_LAST_MODIFIED_ISO,
-  generateShortsToMp4FAQSchema,
-} from "@/app/[locale]/youtube-shorts-to-mp4/shorts-to-mp4-faq"
+import { SHORTS_TO_MP4_LAST_MODIFIED_ISO } from "@/app/[locale]/youtube-shorts-to-mp4/shorts-to-mp4-faq"
 
 type Props = {
   children: React.ReactNode
@@ -109,7 +106,6 @@ export default async function YouTubeShortsToMp4Layout({ children, params }: Pro
           availability: "https://schema.org/InStock",
         },
       },
-      generateShortsToMp4FAQSchema(url),
     ],
   }
 

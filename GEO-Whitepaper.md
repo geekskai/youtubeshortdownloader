@@ -365,11 +365,14 @@ Schema is not for rich snippets.
 
 It is for **retrieval alignment**.
 
-High-impact schemas:
-- FAQPage
-- Article / TechArticle
+High-impact schemas for this project:
+- Article / BlogPosting
 - WebApplication
 - Organization
+- BreadcrumbList
+- HowTo (when steps are accurate)
+
+Do **not** use `FAQPage` JSON-LD here — Google FAQ rich results are restricted to gov/health sites; keep FAQ as visible HTML instead.
 
 Accuracy > Quantity.
 

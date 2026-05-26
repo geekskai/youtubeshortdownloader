@@ -2,7 +2,6 @@ import { Metadata } from "next"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import {
   SHORTS_TO_WEBM_LAST_MODIFIED_ISO,
-  // generateShortsToWebmFAQSchema,
   generateShortsToWebmHowToSchema,
 } from "@/app/[locale]/youtube-shorts-to-webm/shorts-to-webm-faq"
 
@@ -110,7 +109,6 @@ export default async function YouTubeShortsToWebmLayout({ children, params }: Pr
           availability: "https://schema.org/InStock",
         },
       },
-      // generateShortsToWebmFAQSchema(url),
       generateShortsToWebmHowToSchema(url),
     ],
   }

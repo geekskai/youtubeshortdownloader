@@ -937,23 +937,22 @@ export function generateToolSchema(tool: Tool) {
 }
 ```
 
-### 2. FAQ Schema
+### 2. FAQ content (HTML only — no FAQPage JSON-LD)
 
-```typescript
-export function generateFAQSchema(faqs: FAQ[]) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  }
-}
+Google limits FAQ **rich results** to government and health authority sites (policy since August 2023). This project:
+
+- Keeps on-page FAQ sections (`HOME_FAQ_ITEMS`, `*-faq.ts`, blog FAQ frontmatter) for UX and AI retrieval.
+- Does **not** ship `FAQPage` structured data on any route.
+
+```tsx
+// ✅ Good: visible FAQ for users and crawlers
+<dl>
+  <dt>Is this YouTube Shorts downloader free?</dt>
+  <dd>Yes — 100% free with no sign-up.</dd>
+</dl>
+
+// ❌ Do not add on this site
+// { "@type": "FAQPage", mainEntity: [...] }
 ```
 
 ### 3. Breadcrumb Schema
@@ -1240,9 +1239,9 @@ export function trackRankings(keywords: string[]): Promise<RankingData[]> {
 ### Structured Data
 
 - [ ] WebApplication Schema
-- [ ] FAQ Schema (if applicable)
 - [ ] Breadcrumb Schema
 - [ ] Organization Schema
+- [ ] HTML FAQ sections where helpful (no FAQPage JSON-LD)
 - [ ] Only add accurate data
 
 ### Technical SEO

@@ -1,4 +1,4 @@
-/** Homepage FAQ — shared by Main.tsx content and JSON-LD in layout */
+/** Homepage FAQ — shared by Main.tsx page content (no FAQPage JSON-LD) */
 
 export type HomeFaqItem = {
   question: string
@@ -50,18 +50,3 @@ export const HOME_FAQ_ITEMS: HomeFaqItem[] = [
 
 export const HOME_LAST_MODIFIED = "2026-05-27"
 export const HOME_LAST_MODIFIED_ISO = `${HOME_LAST_MODIFIED}T12:00:00.000Z`
-
-export function generateHomeFAQSchema(baseUrl: string) {
-  return {
-    "@type": "FAQPage",
-    "@id": `${baseUrl}#faq`,
-    mainEntity: HOME_FAQ_ITEMS.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  }
-}

@@ -601,23 +601,22 @@ export function generateToolSchema(tool: Tool) {
 }
 ```
 
-### 2. FAQ Schema
+### 2. FAQ 内容（仅 HTML — 不使用 FAQPage JSON-LD）
 
-```typescript
-export function generateFAQSchema(faqs: FAQ[]) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  }
-}
+Google 自 2023 年 8 月起，FAQ **富媒体结果**仅面向政府与医疗健康权威站点。本项目：
+
+- **保留**页面可见 FAQ（`*-faq.ts`、博客 FAQ frontmatter）供用户与 AI 检索。
+- **禁止**在任何路由输出 `FAQPage` 结构化数据。
+
+```tsx
+// ✅ 正确：可见 FAQ
+<dl>
+  <dt>这个 Shorts 下载器免费吗？</dt>
+  <dd>是的，完全免费，无需注册。</dd>
+</dl>
+
+// ❌ 本站不要添加
+// { "@type": "FAQPage", mainEntity: [...] }
 ```
 
 ### 3. Breadcrumb Schema
@@ -904,9 +903,9 @@ export function trackRankings(keywords: string[]): Promise<RankingData[]> {
 ### 结构化数据
 
 - [ ] WebApplication Schema
-- [ ] FAQ Schema（如适用）
 - [ ] Breadcrumb Schema
 - [ ] Organization Schema
+- [ ] HTML FAQ 区块（如适用；不使用 FAQPage JSON-LD）
 - [ ] 只添加准确的数据
 
 ---

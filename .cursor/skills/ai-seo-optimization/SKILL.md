@@ -28,7 +28,7 @@ Quick reference for optimizing content and websites for AI search engines. For c
 - [ ] Structure content in chunks (fact chunks, feature chunks)
 - [ ] Answer in first sentence (Wikipedia principle)
 - [ ] Add citations with specific sources, dates, and numbers
-- [ ] Include FAQ sections with structured data
+- [ ] Include FAQ sections as visible HTML (no FAQPage JSON-LD on this site)
 
 ### Brand Visibility
 - [ ] Test AI visibility with prompt templates weekly
@@ -125,26 +125,11 @@ export function generateToolSchema(tool: Tool) {
 }
 ```
 
-### FAQ Schema
+### FAQ content (HTML only)
 
-```typescript
-export function generateFAQSchema(faqs: FAQ[]) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  }
-}
-```
+Google FAQ rich results are limited to government and health sites. Keep `<dl>` / FAQ blocks on pages; **do not** emit `FAQPage` JSON-LD in this repo.
 
-## Content Writing Patterns
+---
 
 ### Answer-First Structure
 

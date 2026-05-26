@@ -1,9 +1,6 @@
 import { Metadata } from "next"
 import { getTranslations, setRequestLocale } from "next-intl/server"
-import {
-  AUDIO_LAST_MODIFIED,
-  generateAudioFAQSchema,
-} from "@/app/[locale]/youtube-audio-downloader/audio-faq"
+import { AUDIO_LAST_MODIFIED } from "@/app/[locale]/youtube-audio-downloader/audio-faq"
 
 type Props = {
   children: React.ReactNode
@@ -109,7 +106,6 @@ export default async function YouTubeAudioDownloaderLayout({ children, params }:
           availability: "https://schema.org/InStock",
         },
       },
-      generateAudioFAQSchema(url),
     ],
   }
 

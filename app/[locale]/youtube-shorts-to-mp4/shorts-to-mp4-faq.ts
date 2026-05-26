@@ -1,4 +1,4 @@
-/** YouTube Shorts to MP4 page FAQ — shared by ShortsToMp4Main and JSON-LD */
+/** YouTube Shorts to MP4 page FAQ — shared by ShortsToMp4Main page content (no FAQPage JSON-LD) */
 
 export type ShortsToMp4FaqItem = {
   question: string
@@ -50,18 +50,3 @@ export const SHORTS_TO_MP4_FAQ_ITEMS: ShortsToMp4FaqItem[] = [
 
 export const SHORTS_TO_MP4_LAST_MODIFIED = "2026-05-27"
 export const SHORTS_TO_MP4_LAST_MODIFIED_ISO = `${SHORTS_TO_MP4_LAST_MODIFIED}T12:00:00.000Z`
-
-export function generateShortsToMp4FAQSchema(baseUrl: string) {
-  return {
-    "@type": "FAQPage",
-    "@id": `${baseUrl}#faq`,
-    mainEntity: SHORTS_TO_MP4_FAQ_ITEMS.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  }
-}

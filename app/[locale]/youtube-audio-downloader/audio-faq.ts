@@ -1,4 +1,4 @@
-/** YouTube Audio Downloader page FAQ — shared by AudioMain and JSON-LD */
+/** YouTube Audio Downloader page FAQ — shared by AudioMain page content (no FAQPage JSON-LD) */
 
 export type AudioFaqItem = {
   question: string
@@ -29,18 +29,3 @@ export const AUDIO_FAQ_ITEMS: AudioFaqItem[] = [
 ]
 
 export const AUDIO_LAST_MODIFIED = "2026-05-27"
-
-export function generateAudioFAQSchema(baseUrl: string) {
-  return {
-    "@type": "FAQPage",
-    "@id": `${baseUrl}#faq`,
-    mainEntity: AUDIO_FAQ_ITEMS.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  }
-}

@@ -1,4 +1,4 @@
-/** YouTube Shorts to WebM page FAQ — shared by ShortsToWebmMain and JSON-LD */
+/** YouTube Shorts to WebM page FAQ — shared by ShortsToWebmMain page content (no FAQPage JSON-LD) */
 
 export type ShortsToWebmFaqItem = {
   question: string

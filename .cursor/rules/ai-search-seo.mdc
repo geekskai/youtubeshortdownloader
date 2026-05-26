@@ -342,7 +342,15 @@ export function generateToolSchema(tool: Tool) {
 }
 ```
 
-**Principle**: More Schema ≠ Better, accuracy matters more
+### FAQ content vs FAQPage schema (Google policy)
+
+Since **August 2023**, Google shows FAQ rich results only for **government and health authority** sites. For this project:
+
+- **Do** keep visible FAQ sections (`<dl>`, Quick Answer boxes, answer-first headings) for users and AI retrieval.
+- **Do not** output `FAQPage` JSON-LD on any route (home, tool pages, blog posts).
+- **Do** use WebPage, SoftwareApplication, Organization, BreadcrumbList, HowTo, and BlogPosting where accurate.
+
+**Principle**: More Schema ≠ Better; accuracy and eligibility matter more.
 
 ---
 
@@ -476,7 +484,7 @@ Details and context here if needed.
 - [ ] Enable CDN and caching
 - [ ] Preload critical resources
 - [ ] Structured data is accurate and complete
-- [ ] Add FAQ Schema where applicable
+- [ ] Do **not** add FAQPage JSON-LD (Google eligibility limited to gov/health sites; keep HTML FAQ sections instead)
 
 ### Content Freshness
 - [ ] Establish content update schedule (30-90 day cycle)

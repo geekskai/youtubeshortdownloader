@@ -273,21 +273,7 @@ const WebApplicationSchema = {
   ],
 }
 
-// FAQ Schema
-const FAQSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "How accurate are snow day predictions?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Our snow day calculator uses real-time weather data and proven meteorological factors to provide reliable predictions.",
-      },
-    },
-  ],
-}
+// FAQ sections: use visible HTML (dl/FAQ blocks) for users and AI — do NOT emit FAQPage JSON-LD on this site.
 ```
 
 ## 📊 内容营销优化

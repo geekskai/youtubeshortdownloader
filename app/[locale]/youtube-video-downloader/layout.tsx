@@ -1,9 +1,6 @@
 import { Metadata } from "next"
 import { getTranslations, setRequestLocale } from "next-intl/server"
-import {
-  VIDEO_LAST_MODIFIED_ISO,
-  generateVideoFAQSchema,
-} from "@/app/[locale]/youtube-video-downloader/video-faq"
+import { VIDEO_LAST_MODIFIED_ISO } from "@/app/[locale]/youtube-video-downloader/video-faq"
 
 type Props = {
   children: React.ReactNode
@@ -109,7 +106,6 @@ export default async function YouTubeVideoDownloaderLayout({ children, params }:
           availability: "https://schema.org/InStock",
         },
       },
-      generateVideoFAQSchema(url),
     ],
   }
 

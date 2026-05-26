@@ -1,4 +1,4 @@
-/** YouTube Video Downloader page FAQ — shared by VideoMain and JSON-LD */
+/** YouTube Video Downloader page FAQ — shared by VideoMain page content (no FAQPage JSON-LD) */
 
 export type VideoFaqItem = {
   question: string
@@ -50,18 +50,3 @@ export const VIDEO_FAQ_ITEMS: VideoFaqItem[] = [
 
 export const VIDEO_LAST_MODIFIED = "2026-05-27"
 export const VIDEO_LAST_MODIFIED_ISO = `${VIDEO_LAST_MODIFIED}T12:00:00.000Z`
-
-export function generateVideoFAQSchema(baseUrl: string) {
-  return {
-    "@type": "FAQPage",
-    "@id": `${baseUrl}#faq`,
-    mainEntity: VIDEO_FAQ_ITEMS.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  }
-}
